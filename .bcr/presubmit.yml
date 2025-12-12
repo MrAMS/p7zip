@@ -1,7 +1,7 @@
-# BCR presubmit configuration for 7zip module
+# BCR presubmit configuration for p7zip module
 # This file defines the build verification tests
 
-# Verify that the 7zip module can be built as a dependency
+# Verify that the p7zip module can be built as a dependency
 matrix:
   platform:
     - ubuntu2004
@@ -16,4 +16,4 @@ tasks:
     platform: ${{ platform }}
     bazel: ${{ bazel }}
     build_targets:
-      - "@7zip//:7za"
+      - "@p7zip//:7za"
