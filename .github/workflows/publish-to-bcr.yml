@@ -5,13 +5,62 @@ on:
     types: [published]
 
 jobs:
+  create-archive:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          submodules: recursive
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${VERSION#v}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Create release archive
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          ARCHIVE_NAME="p7zip-${VERSION}.tar.gz"
+
+          # Create a temporary directory
+          mkdir -p /tmp/archive
+
+          # Copy all files to archive directory with proper structure
+          cp -r . "/tmp/archive/p7zip-${VERSION}/"
+
+          # Remove unwanted files from the archive
+          cd "/tmp/archive/p7zip-${VERSION}"
+          rm -rf .git .github bazel-* scripts
+
+          # Create the tar.gz archive
+          cd /tmp/archive
+          tar -czf "${ARCHIVE_NAME}" "p7zip-${VERSION}/"
+
+          # Move archive to workspace
+          mv "${ARCHIVE_NAME}" "${GITHUB_WORKSPACE}/"
+
+      - name: Upload release archive
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          ARCHIVE_NAME="p7zip-${VERSION}.tar.gz"
+          gh release upload "v${VERSION}" "${ARCHIVE_NAME}" --repo "${{ github.repository }}" --clobber
+
   publish:
+    needs: create-archive
+    permissions:
+      contents: write
     uses: bazel-contrib/publish-to-bcr/.github/workflows/publish.yaml@v1.0.0
     with:
       tag_name: ${{ github.event.release.tag_name }}
       registry_fork: MrAMS/bazel-central-registry
       attest: false
-    permissions:
-      contents: write
     secrets:
       publish_token: ${{ secrets.CI_PAT_TOKEN }}

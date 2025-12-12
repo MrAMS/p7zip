@@ -1,5 +1,5 @@
 {
   "integrity": "",
   "strip_prefix": "p7zip-{VERSION}",
-  "url": "https://github.com/{OWNER}/{REPO}/archive/refs/tags/v{VERSION}.tar.gz"
+  "url": "https://github.com/{OWNER}/{REPO}/releases/download/v{VERSION}/p7zip-{VERSION}.tar.gz"
 }
